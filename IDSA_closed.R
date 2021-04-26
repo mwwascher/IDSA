@@ -2,6 +2,9 @@ library(plotly)
 library(processx)
 
 #####Initialization
+dir.create("~/IDSAClosed")
+print("This script simulates an epidemic and fits the closed IDSA model to the simulated epidemic.")
+
 n = 10000
 n.days = 60
 set.seed(456)
@@ -47,6 +50,7 @@ adj.test = rep(1500, n.days-1)
 adj.n = rep(n, n.days-1)
 
 #####Simulate the epidemic
+print("Simulating epidemic...")
 for (i in 1:(n.days-1))
 {
   
@@ -81,11 +85,9 @@ for (i in 1:(n.days-1))
   
   num.delta = rbinom(1,num.S, (1-(1-beta.t[i]/n)^(num.I)))
   delta.t = sample(S[[i]], num.delta)
-  print("I")
   
   num.omega = rbinom(1, num.E, phi.t[i])
   omega.t = sample(E[[i]], num.omega)
-  print("E")
   
   adj.test[i] = adj.test[i] - length(R[[i]][R[[i]] %in% test[[i]]])
   pos.pct[i] = length(I[[i]][I[[i]] %in% test[[i]]])/length(test[[i]])
@@ -97,7 +99,6 @@ for (i in 1:(n.days-1))
     trace.remove = sample(I[[i]][!I[[i]] %in% eps.t], num.trace)
     traced[[i]] = trace.remove
     eps.t = c(eps.t, trace.remove)
-    print("R")
   }
   
   if (i <= 2)
@@ -248,12 +249,18 @@ loglik.eps = function(eps, delta, I, S)
 
 IDSAplot = function()
 {
-  write.csv(I.samp[(.5*nreps+1):nreps,], file = "posterior_I.csv")
-  write.csv(S.samp[(.5*nreps+1):nreps,], file = "posterior_S.csv")
-  write.csv(delta.samp[(.5*nreps+1):nreps,], file = "posterior_delta.csv")
-  write.csv(eps.samp[(.5*nreps+1):nreps,], file = "posterior_eps.csv")
-  write.csv(beta.samp[(.5*nreps+1):nreps,], file = "posterior_beta.csv")
-  write.csv(gamma.samp[(.5*nreps+1):nreps,], file = "posterior_gamma.csv")
+  print("Writing posterior I samples to posterior_I.csv...")
+  write.csv(I.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_I.csv")
+  print("Writing posterior S samples to posterior_S.csv...")
+  write.csv(S.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_S.csv")
+  print("Writing posterior delta samples to posterior_dela.csv...")
+  write.csv(delta.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_delta.csv")
+  print("Writing posterior epsilon samples to posterior_epsilon.csv...")
+  write.csv(eps.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_eps.csv")
+  print("Writing posterior beta samples to posterior_beta.csv...")
+  write.csv(beta.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_beta.csv")
+  print("Writing posterior gamma samples to posterior_gamma.csv...")
+  write.csv(gamma.samp[(.5*nreps+1):nreps,], file = "~/IDSAClosed/posterior_gamma.csv")
   
   I.mean = apply(I.samp[(.5*nreps+1):nreps,], 2, mean)
   I.min = apply(I.samp[(.5*nreps+1):nreps,], 2, quantile, probs = .025)
@@ -272,10 +279,9 @@ IDSAplot = function()
   gamma.med = apply(gamma.samp[(.5*nreps+1):nreps,], 2, quantile, probs = .5)
   gamma.max = apply(gamma.samp[(.5*nreps+1):nreps,], 2, quantile, probs = .975)
   gamma.min = apply(gamma.samp[(.5*nreps+1):nreps,], 2, quantile, probs = .025)
-  plot(gamma.max, ylim = c(0,.5), type = "l")
-  lines(gamma.min)
-  points(gamma.med)
   
+  print("Generating plots...")
+
   t <- list(
     family = "arial",
     size = 22,
@@ -286,12 +292,7 @@ IDSAplot = function()
     size = 24,
     color = "black")
   
-  
-  plot(beta.med, type = "l", ylim = c(0,1))
-  lines(beta.min, col = "red")
-  lines(beta.max, col = "red")
-  lines(beta.t, col = "blue")
-  
+
   fig.on <- plot_ly(type = "scatter", mode = "lines", showlegend = TRUE)
   fig.on <- fig.on %>% add_trace(x = c(1:(n.days-4)), y = I.min[1:(n.days-4)], mode = "lines", name = '2.5%', line = list(color = "rgb(44, 160, 44)"))
   fig.on <- fig.on %>% add_trace(x = c(1:(n.days-4)), y = I.med[1:(n.days-4)], mode = "lines", name = '50%', line = list(color = "rgb(255, 127, 14)"), fill = "tonexty", fillcolor = "rgba(168, 216, 234, 0.5)")
@@ -306,7 +307,7 @@ IDSAplot = function()
                               yaxis = list(title = "Infected", range = c(0,400)), font = t,
                               margin = list(b = 100))
   fig.on <- fig.on %>% config(mathjax = 'cdn')
-  orca(fig.on, "Closed_fit.svg")
+  orca(fig.on, "IDSAClosed/Closed_fit.svg")
   
   
   #####R_t
@@ -333,7 +334,7 @@ IDSAplot = function()
                               yaxis = list(title = "R_t", range = c(0,8)), font = t,
                               margin = list(b = 100))
   fig.rt <- fig.rt %>% config(mathjax = 'cdn')
-  orca(fig.rt, "Closed_Rt.svg")
+  orca(fig.rt, "IDSAClosed/Closed_Rt.svg")
 }
 
 ########Model fitting Initialization
@@ -341,7 +342,7 @@ inf.prop = (1-length(which(is.na(test.mat[,2])))/n)
 p.t = rep(inf.prop/n.days, n.days)
 p.t.ex = p.t
 p.t.unif = rep(1/n.days, n.days)
-p.t.null = rep(inf.prop/n.days, n.days)n
+p.t.null = rep(inf.prop/n.days, n.days)
 S.null = .99
 I = rep(5, n.days)
 I.new = rep(0, n.days)
@@ -377,6 +378,7 @@ ex.geom = inf.dates - ex.dates
 accept.eps = 0
 
 ###Gibbs sampler
+print("Running MCMC...")
 for (k in 1:nreps)
 {
   
@@ -492,3 +494,4 @@ for (k in 1:nreps)
 
 #####Output
 IDSAplot()
+print("Output complete.")

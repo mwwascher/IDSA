@@ -1,6 +1,9 @@
 library(plotly)
 
 #####Initialize
+dir.create("~/IDSAOpen")
+print("This script simulates an epidemic and fits the open IDSA model to the simulated epidemic.")
+
 n = 10000
 n.off = 30000
 n.days = 60
@@ -74,6 +77,7 @@ trace.count.off = c()
 pos.count = rep(0, n.days-1)
 
 ####Simulate the epidemic
+print("Simulating epidemic...")
 for (i in 1:(n.days-1))
 {
   
@@ -323,12 +327,18 @@ loglik.eps = function(eps, delta, I, S)
 IDSAplot_open = function()
 {
   
-  write.csv(I.samp[(.5*nreps+1):nreps,], file = "posterior_I1.csv")
-  write.csv(S.samp[(.5*nreps+1):nreps,], file = "posterior_S1.csv")
-  write.csv(delta.samp[(.5*nreps+1):nreps,], file = "posterior_delta1.csv")
-  write.csv(eps.samp[(.5*nreps+1):nreps,], file = "posterior_eps1.csv")
-  write.csv(psi.1.samp[(.5*nreps+1):nreps,], file = "posterior_phi1.csv")
-  write.csv(gamma.samp[(.5*nreps+1):nreps,], file = "posterior_gamma1.csv")
+  print("Writing posterior I_1 samples to posterior_I1.csv...")
+  write.csv(I.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_I1.csv")
+  print("Writing posterior s_1 samples to posterior_S1.csv...")
+  write.csv(S.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_S1.csv")
+  print("Writing posterior delta_1 samples to posterior_delta1.csv...")
+  write.csv(delta.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_delta1.csv")
+  print("Writing posterior epsilon_1 samples to posterior_eps1.csv...")
+  write.csv(eps.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_eps1.csv")
+  print("Writing posterior phi_1 samples to posterior_phi1.csv...")
+  write.csv(psi.1.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_phi1.csv")
+  print("Writing posterior gamma_1 samples to posterior_gamma1.csv...")
+  write.csv(gamma.samp[(.5*nreps+1):nreps,], file = "~/IDSAOpen/posterior_gamma1.csv")
   
   I.med = apply(I.samp[(.5*nreps+1):nreps,], 2, median)
   I.max = apply(I.samp[(.5*nreps+1):nreps,], 2, quantile, probs = .975)
@@ -337,6 +347,7 @@ IDSAplot_open = function()
   S.t.med = apply(S.t.samp[(.5*nreps+1):nreps,], 2, median)
   
   phi.med = apply(psi.1.samp[(.5*nreps+1):nreps,], 2, median)
+  print("Generating plots...")
   
   fig.off <- plot_ly(type = "scatter", mode = "lines", showlegend = TRUE)
   fig.off <- fig.off %>% add_trace(x = c(1:(n.days-4)), y = I.min[1:(n.days-4)], mode = "lines", name = '2.5%', line = list(color = "rgb(44, 160, 44)"))
@@ -362,7 +373,7 @@ IDSAplot_open = function()
                                 yaxis = list(title = "Infected", range = c(0,660)), font = t,
                                 margin = list(b = 100))
   fig.off <- fig.off %>% config(mathjax = 'cdn')
-  orca(fig.off, "Open_fit.svg")
+  orca(fig.off, "IDSAOpen/Open_fit.svg")
   
   
   #####R_t
@@ -406,7 +417,8 @@ IDSAplot_open = function()
                               margin = list(b = 100))
   fig.rt <- fig.rt %>% config(mathjax = 'cdn')
   fig.rt
-  orca(fig.rt, "Open_Rt.svg")
+  
+  
 }
 
 #####Smooth background group I
@@ -476,6 +488,7 @@ accept = 0
 reject = 0
 
 #####Gibbs sampler
+print("Running MCMC...")
 for (i in 1:nreps)
   {
   X.unif = runif(1, -.003, .003)
@@ -636,3 +649,4 @@ for (i in 1:nreps)
 
 #####Prevalence
 IDSAplot_open()
+print("Output complete.")
