@@ -1,4 +1,5 @@
 library(plotly)
+library(processx)
 
 #####Initialize
 dir.create("~/IDSAOpen")
@@ -14,9 +15,9 @@ test.mat = matrix(NA, nrow = n, ncol = 2)
 prop.mat = matrix(NA, nrow = n.days, ncol = 2)
 
 beta.t = rep(.12, n.days)
-beta.t[1:7] = .35
-beta.t[8:14] = .45
-beta.t[14:21] = .2
+beta.t[1:7] = .3
+beta.t[8:14] = .35
+beta.t[14:21] = .08
 beta.t[22:28] = .08
 trace.prob = .85
 gamma.t = rep(.25, n.days)
@@ -24,7 +25,7 @@ phi.t = rep(.25, n.days)
 
 beta.off = rep(.12, n.days)
 gamma.off = rep(.1, n.days)
-beta.cross = rep(.01, n.days)
+beta.cross = rep(.0225, n.days)
 
 
 S <- vector(mode = "list", length = n.days)
